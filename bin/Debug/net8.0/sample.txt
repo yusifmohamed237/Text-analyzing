@@ -1,6 +1,0 @@
-Hello! This is a simple text file.
-It contains multiple sentences.
-Each sentence is separated by a period, exclamation mark, or question mark.
-
-This is a new paragraph. F# is fun to use!
-You can analyze text with it easily.
