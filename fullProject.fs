@@ -5,7 +5,6 @@ open System.Drawing
 open System.Text.RegularExpressions
 open System.Threading
 
-
 // Windows Forms UI
 let form = new Form(Text = "Text Analyzer", Width = 700, Height = 600, StartPosition = FormStartPosition.CenterScreen, BackColor = Color.LightGray)
 
@@ -28,11 +27,15 @@ form.Controls.Add(buttonPanel)
 form.Controls.Add(inputTextBox)
 form.Controls.Add(headerPanel)
 
-let openFileDialog = new OpenFileDialog() 
+let openFileDialog = new OpenFileDialog()
+
+// Helper function to split text into words
+let splitTextToWords (text: string) =
+    text.Split([|' '; '\t'; '\n'; '\r'; '.'; ','; ';'; ':'; '!'|], StringSplitOptions.RemoveEmptyEntries)
+
 // Function to count words
 let countWords (text: string) =
-    let words = text.Split([|' '; '\t'; '\n'; '\r'; '.'; ','; ';'; ':'; '!'|], StringSplitOptions.RemoveEmptyEntries)
-    words.Length
+    splitTextToWords text |> Array.length
 
 // Function to count sentences
 let countSentences (text: string) =
@@ -46,8 +49,7 @@ let countParagraphs (text: string) =
 
 // Function to count word frequency
 let wordFrequency (text: string) =
-    let words = text.Split([|' '; '\t'; '\n'; '\r'; '.'; ','; ';'; ':'; '!'|], StringSplitOptions.RemoveEmptyEntries)
-    words
+    splitTextToWords text
     |> Array.fold (fun (acc: System.Collections.Generic.Dictionary<string, int>) word ->
         let word = word.ToLower()
         if acc.ContainsKey(word) then
@@ -56,8 +58,6 @@ let wordFrequency (text: string) =
             acc.Add(word, 1)
         acc
     ) (System.Collections.Generic.Dictionary<string, int>())
-
-
 
 // Function to calculate average sentence length
 let averageSentenceLength (text: string) =
@@ -69,33 +69,6 @@ let averageSentenceLength (text: string) =
     else
         0.0
 
-// Function to display results
-let displayResults (text: string) =
-    // Counts
-    let wordCount = countWords text
-    let sentenceCount = countSentences text
-    let paragraphCount = countParagraphs text
-    let avgSentenceLength = averageSentenceLength text
-    
-    // Word frequencies
-    let wordFreq = wordFrequency text
-    let mostFrequentWords = 
-        wordFreq
-        |> Seq.sortByDescending (fun kvp -> kvp.Value)
-        |> Seq.take 5  // Display top 5 most frequent words
-
-    // Print results
-    printfn "Text Analysis Results:"
-    printfn "----------------------"
-    printfn "\nWord Count: %d" wordCount
-    printfn "\nSentence Count: %d" sentenceCount
-    printfn "\nParagraph Count: %d" paragraphCount
-    printfn "\nAverage Sentence Length: %.2f words" avgSentenceLength
-    printfn "\nTop 5 Most Frequent Words:"
-    mostFrequentWords |> Seq.iter (fun kvp -> printfn "%s: %d" kvp.Key kvp.Value)
-
-
-
 // Load Button Event: Opens file dialog to load a file
 loadButton.Click.Add(fun _ ->
     let result = openFileDialog.ShowDialog()
@@ -105,10 +78,10 @@ loadButton.Click.Add(fun _ ->
         inputTextBox.Text <- text
 )
 
+// Analyze Button Event: Analyze text on a background thread to avoid blocking the UI
 analyzeButton.Click.Add(fun _ ->
     let text = inputTextBox.Text
     if text <> "" then
-        // Perform analysis in a background thread
         ThreadPool.QueueUserWorkItem(fun _ ->
             let wordCount = countWords text
             let sentenceCount = countSentences text
@@ -140,7 +113,6 @@ analyzeButton.Click.Add(fun _ ->
             ) |> ignore
         ) |> ignore
 )
-
 
 // Start the application
 [<STAThread>]
